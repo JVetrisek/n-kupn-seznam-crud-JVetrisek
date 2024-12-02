@@ -2,14 +2,15 @@ const Ajv = require('ajv');
 const ajv = new Ajv();
 
 const shoppingListDao = require("../../dao/shoppingLIst-dao");
-const userDao = require("../../dao/user-dao.js"); // Pro použití ownerVal_idation
+const userDao = require("../../dao/user-dao.js");
 
 const shoppingListSchema = {
     type: "object",
     properties: {
-        __id: { type: "string" },
+        _id: { type: "string" },
+        userId: { type: "string" },
     },
-    required: ["__id"],
+    required: ["_id", "userId"],
     additionalProperties: false,
 };
 
@@ -17,18 +18,17 @@ async function DeleteshoppingList(req, res) {
     try {
         const reqShoppingList = req.query?._id ? req.query : req.body;
 
-        // Val_idace DTO (data transfer object)
-        const val_id = ajv.val_idate(shoppingListSchema, reqShoppingList);
+        const val_id = ajv.validate(shoppingListSchema, reqShoppingList);
         if (!val_id) {
             res.status(400).json({
                 code: "dtoInIsNotVal_id",
-                message: "DTO is not val_id",
-                val_idationError: ajv.errors,
+                message: "DTO is not valid",
+                validationError: ajv.errors,
             });
             return;
         }
 
-        const userId = req.auth?.userId; // Předpokládáme, že uživatelské ID je v `req.auth`
+        const userId = req.auth?.userId;
 
         if (!userId) {
             res.status(401).json({
@@ -38,7 +38,6 @@ async function DeleteshoppingList(req, res) {
             return;
         }
 
-        // Ověření, zda nákupní seznam existuje
         const shoppingList = shoppingListDao.get(reqShoppingList._id);
         if (!shoppingList) {
             res.status(404).json({
@@ -48,7 +47,6 @@ async function DeleteshoppingList(req, res) {
             return;
         }
 
-        // Ověření, zda je uživatel vlastníkem nákupního seznamu
         const isOwner = await userDao.ownerVal_idation(userId, reqShoppingList._id);
         if (!isOwner) {
             res.status(403).json({
@@ -58,9 +56,8 @@ async function DeleteshoppingList(req, res) {
             return;
         }
 
-        // Odstranění nákupního seznamu
         shoppingListDao.remove(reqShoppingList._id);
-        res.json({}); // Vrátíme prázdnou odpověď jako potvrzení smazání
+        res.json({});
     } catch (e) {
         res.status(500).json({ message: e.message });
     }

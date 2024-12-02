@@ -92,6 +92,18 @@ async function removeMemberFromShoppingList(shoppingListId, memberId) {
     }
 }
 
+async function get(shoppingListId) {
+    try {
+        const shoppingList = await ShoppingList.findById(shoppingListId);
+        if (!shoppingList) {
+            throw { code: "notFound", message: `Shopping list with ID ${shoppingListId} not found.` };
+        }
+        return shoppingList;
+    } catch (error) {
+        throw { code: "getFailed", message: error.message };
+    }
+}
+
 module.exports = {
     create,
     remove,
@@ -99,5 +111,6 @@ module.exports = {
     list,
     listByUser,
     addMemberToShoppingList,
-    removeMemberFromShoppingList
+    removeMemberFromShoppingList,
+    get
 };

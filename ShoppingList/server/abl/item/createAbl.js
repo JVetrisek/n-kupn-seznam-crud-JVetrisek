@@ -2,14 +2,15 @@ const Ajv = require('ajv');
 const ajv = new Ajv();
 const itemDao = require("../../dao/item-dao.js");
 const shoppingListDao = require("../../dao/shoppingLIst-dao.js");
-const userDao = require("../../dao/user-dao.js"); // Pro použití memberValidation
+const userDao = require("../../dao/user-dao.js");
 
 const itemSchema = {
     type: "object",
     properties: {
         name: { type: "string" },
         description: { type: "string" },
-        shoppingListId: { type: "string" }, // Odkaz na shopping list
+        price: { type: Number },
+        shoppingListId: { type: "string" },
     },
     required: ["name", "shoppingListId"],
     additionalProperties: false,
@@ -30,7 +31,7 @@ async function CreateItem(req, res) {
             return;
         }
 
-        const userId = req.auth?.userId; // Předpokládáme, že uživatelské ID je v `req.auth`
+        const userId = req.auth?.userId;
 
         if (!userId) {
             res.status(401).json({
